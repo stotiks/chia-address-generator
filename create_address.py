@@ -86,8 +86,8 @@ def print_header(sk):
 
 
 if __name__ == "__main__":
-    mnemonic = generate_mnemonic()
-    seed = mnemonic_to_seed("SEED", "")
+    #mnemonic = generate_mnemonic()
+    seed = mnemonic_to_seed("MNEMONIC", "")
     key = AugSchemeMPL.key_gen(seed)
     print_header(key)
 
