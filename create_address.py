@@ -1,4 +1,4 @@
-from progressbar import progressbar
+import progressbar
 from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
 from base.consensus.coinbase import create_puzzlehash_for_pk
@@ -96,19 +96,21 @@ def check_address(address):
 
 if __name__ == "__main__":
 
+    bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength, redirect_stdout=True)
     while True:
         mnemonic = generate_mnemonic()
         seed = mnemonic_to_seed(mnemonic, "")
         key = AugSchemeMPL.key_gen(seed)
 
         max_i = 10000
-        for i in progressbar(range(max_i), redirect_stdout=True):
+        for i in range(max_i):
+            bar.update(i)
             address = get_address(key,i)
             if check_address(address):
                 print("-------------------------")
                 print(mnemonic)
                 print(address)
-                #break
+                break
 
 
 
