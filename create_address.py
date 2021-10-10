@@ -1,3 +1,4 @@
+from progressbar import progressbar
 from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
 from base.consensus.coinbase import create_puzzlehash_for_pk
@@ -85,12 +86,31 @@ def print_header(sk):
     print("\n")
 
 
-if __name__ == "__main__":
-    #mnemonic = generate_mnemonic()
-    seed = mnemonic_to_seed("MNEMONIC", "")
-    key = AugSchemeMPL.key_gen(seed)
-    print_header(key)
+words = {"11","22","33","44"}
+def check_address(address):
+    for word in words:
+        if address.endswith(word):
+            return True
+    return False
 
-    for i in range(0, 210):
-        address = get_address(key,i)
-        print(address)
+
+if __name__ == "__main__":
+
+    while True:
+        mnemonic = generate_mnemonic()
+        seed = mnemonic_to_seed(mnemonic, "")
+        key = AugSchemeMPL.key_gen(seed)
+
+        max_i = 10000
+        for i in progressbar(range(max_i), redirect_stdout=True):
+            address = get_address(key,i)
+            if check_address(address):
+                print("-------------------------")
+                print(mnemonic)
+                print(address)
+                #break
+
+
+
+
+
