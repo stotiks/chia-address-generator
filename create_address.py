@@ -1,4 +1,7 @@
 import progressbar
+import itertools
+import multiprocessing
+
 from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
 from base.consensus.coinbase import create_puzzlehash_for_pk
@@ -68,7 +71,6 @@ def get_address(sk, index: int = 0):
     address = encode_puzzle_hash(create_puzzlehash_for_pk(master_sk_to_wallet_sk(sk, int(index)).get_g1()), prefix)
     return address
 
-
 def print_header(sk):
     print("\n")
     #print(key)
@@ -86,33 +88,38 @@ def print_header(sk):
     print("\n")
 
 
-words = {"11","22","33","44"}
+words = {"777","shit","chia","fuck","cunt","apple","2222","3333","4444","5555","6666","7777","8888","9999","0000","chives"}
 def check_address(address):
     for word in words:
         if address.endswith(word):
             return True
     return False
 
+def find_address(seed, i, mnemonic):
+    key = AugSchemeMPL.key_gen(seed)
+    address = get_address(key,i)
+    #print(address)
+    if check_address(address):
+        print("-------------------------")
+        print(mnemonic)
+        print(address)
+        print(i)
+        #break
+    return False
+
 
 if __name__ == "__main__":
 
-    bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength, redirect_stdout=True)
+    #bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength, redirect_stdout=True)
+
+    pool = multiprocessing.Pool(processes=16)
+
+    max_i = 100
     while True:
         mnemonic = generate_mnemonic()
         seed = mnemonic_to_seed(mnemonic, "")
-        key = AugSchemeMPL.key_gen(seed)
+        #key = AugSchemeMPL.key_gen(seed)
+        #print_header(key)
+        pool.starmap(find_address, zip(itertools.repeat(seed), range(max_i), itertools.repeat(mnemonic)) )
 
-        max_i = 10000
-        for i in range(max_i):
-            bar.update(i)
-            address = get_address(key,i)
-            if check_address(address):
-                print("-------------------------")
-                print(mnemonic)
-                print(address)
-                break
-
-
-
-
-
+    pool.close()
