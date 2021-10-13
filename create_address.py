@@ -1,6 +1,9 @@
 import progressbar
 import itertools
-import multiprocessing
+import time
+
+from multiprocessing import Process, Lock
+from multiprocessing.sharedctypes import Value, Array
 
 from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
@@ -88,38 +91,42 @@ def print_header(sk):
     print("\n")
 
 
-words = {"777","shit","chia","fuck","cunt","apple","2222","3333","4444","5555","6666","7777","8888","9999","0000","chives"}
+words = {"777","222","333","444","555","666","888","999","000"}
 def check_address(address):
     for word in words:
         if address.endswith(word):
             return True
     return False
 
-def find_address(seed, i, mnemonic):
-    key = AugSchemeMPL.key_gen(seed)
-    address = get_address(key,i)
-    #print(address)
-    if check_address(address):
-        print("-------------------------")
-        print(mnemonic)
-        print(address)
-        print(i)
-        #break
-    return False
-
-
-if __name__ == "__main__":
-
-    #bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength, redirect_stdout=True)
-
-    pool = multiprocessing.Pool(processes=16)
-
+def find_address(lock):
     max_i = 100
     while True:
         mnemonic = generate_mnemonic()
         seed = mnemonic_to_seed(mnemonic, "")
-        #key = AugSchemeMPL.key_gen(seed)
+        key = AugSchemeMPL.key_gen(seed)
         #print_header(key)
-        pool.starmap(find_address, zip(itertools.repeat(seed), range(max_i), itertools.repeat(mnemonic)) )
 
-    pool.close()
+        for i in range(max_i):
+            address = get_address(key,i)
+            #print(address)
+            if check_address(address):
+                lock.acquire()
+                try:
+                    print("-------------------------")
+                    print(mnemonic)
+                    print(address)
+                    print(i)
+                finally:
+                    lock.release()            
+
+
+if __name__ == "__main__":
+
+    process_count = 8
+
+    lock = Lock()
+
+    pool = [Process(target=find_address,  args=(lock,)) for _ in range(process_count)]
+
+    for p in pool:
+        p.start()
