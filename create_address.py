@@ -1,6 +1,5 @@
 import progressbar
-import itertools
-import time
+import json
 
 from multiprocessing import Process, Lock
 from multiprocessing.sharedctypes import Value, Array
@@ -11,13 +10,6 @@ from base.consensus.coinbase import create_puzzlehash_for_pk
 from base.util.bech32m import decode_puzzle_hash, encode_puzzle_hash
 from words.mnemonic import generate_mnemonic, mnemonic_to_seed
 from blspy import G1Element, PrivateKey, G2Element, AugSchemeMPL
-
-prefix = 'xcc'
-
-if prefix == 'xcc':
-    port = 9699
-else:
-    port = 8444
 
 def create_address_by_pk(pk: str) -> str:
     return encode_puzzle_hash(
@@ -90,8 +82,25 @@ def print_header(sk):
     )
     print("\n")
 
+config_f = open('config.json',)
+params = json.load(config_f)
 
-words = {"777","222","333","444","555","666","888","999","000"}
+
+prefix = params["prefix"]
+words = params["words"]
+max_i = params["max_i"]
+process_count = params["process_count"]
+
+
+if prefix == 'xcc':
+    port = 9699
+elif prefix == 'xch':
+    port = 8444
+else:
+    print("Uncorrect prefix")
+    quit()
+
+
 def check_address(address):
     for word in words:
         if address.endswith(word):
@@ -99,7 +108,6 @@ def check_address(address):
     return False
 
 def find_address(lock):
-    max_i = 100
     while True:
         mnemonic = generate_mnemonic()
         seed = mnemonic_to_seed(mnemonic, "")
@@ -112,17 +120,25 @@ def find_address(lock):
             if check_address(address):
                 lock.acquire()
                 try:
-                    print("-------------------------")
-                    print(mnemonic)
-                    print(address)
-                    print(i)
+                    result = """-------------------------
+Fingerprint: {3}                    
+Mnemonic: {0}
+Address [{2}]: {1}
+""".format(mnemonic, address, i, key.get_g1().get_fingerprint() )
+
+                    print(result)
+                    
+                    f = open("results.txt", "a")
+                    f.write(result)
+                    f.close()
+
                 finally:
                     lock.release()            
 
 
 if __name__ == "__main__":
 
-    process_count = 8
+    print(params)
 
     lock = Lock()
 
