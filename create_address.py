@@ -1,8 +1,9 @@
 import progressbar
 import json
+import sys
+import multiprocessing
 
 from multiprocessing import Process, Lock
-from multiprocessing.sharedctypes import Value, Array
 
 from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
@@ -137,6 +138,10 @@ Address [{2}]: {1}
 
 
 if __name__ == "__main__":
+
+    if sys.platform.startswith('win'):
+            # On Windows calling this function is necessary.
+            multiprocessing.freeze_support()
 
     print(params)
 
