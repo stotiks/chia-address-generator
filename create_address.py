@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
         try:
             bytes_from_mnemonic(test_mnemonic)
-        except:
+        except ValueError as e:
             continue
 
         #print(test_mnemonic)
