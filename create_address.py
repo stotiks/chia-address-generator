@@ -1,6 +1,7 @@
 import progressbar
 import json
 import sys
+import re
 import multiprocessing
 
 from multiprocessing import Process, Lock
@@ -100,66 +101,57 @@ elif prefix == 'xch':
 else:
     print("Uncorrect prefix")
     quit()
-
-
-def check_address(address):
-    for word in words:
-        if address.endswith(word):
-            return True
-    return False
-
-def find_address(lock):
-    while True:
-        mnemonic = generate_mnemonic()
-        seed = mnemonic_to_seed(mnemonic, "")
-        key = AugSchemeMPL.key_gen(seed)
-        #print_header(key)
-
-        for i in range(max_i):
-            address = get_address(key,i)
-            #print(address)
-            if check_address(address):
-                lock.acquire()
-                try:
-                    result = """-------------------------
-Fingerprint: {3}                    
-Mnemonic: {0}
-Address [{2}]: {1}
-""".format(mnemonic, address, i, key.get_g1().get_fingerprint() )
-
-                    print(result)
-                    
-                    f = open("results.txt", "a")
-                    f.write(result)
-                    f.close()
-
-                finally:
-                    lock.release()            
-
+       
 
 if __name__ == "__main__":
 
-    #mnemonic = generate_mnemonic();    
-    #print(mnemonic)
-
-    seed = mnemonic_to_seed(mnemonic, "")
-    key = AugSchemeMPL.key_gen(seed)
-    print_header(key)
-
-
-    userMnemonic = mnemonic
     keyWordList=bip39_word_list().splitlines()
-    for index in range(len(keyWordList)):
-        testWord=keyWordList[index]
-        print(str(index)+"/"+str(len(keyWordList))+" "+testWord)
 
-        testMne = userMnemonic.replace("?",testWord)
-        seed=mnemonic_to_seed(testMne,"")
+    mnemonic_words = mnemonic.strip().split()
+
+    posible_words = [0 for i in range(len(mnemonic_words))] 
+
+    for index in range(len(mnemonic_words)):
+        word = mnemonic_words[index]
+
+        posible_words[index] = []
+
+        r = re.compile(word)
+        newlist = list(filter(r.match, keyWordList))
+        posible_words[index] = newlist
+
+        print("{} {}".format(index+1, posible_words[index]))
+
+    posible_mnemonics_count = 1;
+    for words in posible_words:
+        #print(words)
+        posible_mnemonics_count *= len(words)
+
+    print("Posible Mnemonics: " + str(posible_mnemonics_count))
+
+    bar = progressbar.ProgressBar(max_value=posible_mnemonics_count, redirect_stdout=True)
+
+    for i in range(posible_mnemonics_count):
+        bar.update(i)
+        test_mnemonic_arr = []
+        for index in range(len(mnemonic_words)):
+            c = i % len(posible_words[index])        
+            i = (i - c) // len(posible_words[index])
+            test_mnemonic_arr.append(posible_words[index][c])
+            #print(c)
+
+        test_mnemonic = " ".join(test_mnemonic_arr)
+        #print(test_mnemonic)
+
+        seed=mnemonic_to_seed(test_mnemonic,"")
         key=AugSchemeMPL.key_gen(seed)
 
-        for i in range(max_i):
-            address = get_address(key,i)
+        for ii in range(max_i):
+            address = get_address(key,ii)
             if(address == s_address):
-                print(print("the result is:"+testWord))
-                quit()
-            
+                print("---------------------------------")
+                print(test_mnemonic)
+                print("---------------------------------")
+                sys.exit()
+
+    print("Not found :(")
