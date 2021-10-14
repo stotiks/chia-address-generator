@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
 from base.consensus.coinbase import create_puzzlehash_for_pk
 from base.util.bech32m import decode_puzzle_hash, encode_puzzle_hash
-from words.mnemonic import generate_mnemonic, mnemonic_to_seed, bip39_word_list
+from words.mnemonic import generate_mnemonic, mnemonic_to_seed, bip39_word_list, bytes_from_mnemonic
 from blspy import G1Element, PrivateKey, G2Element, AugSchemeMPL
 
 def create_address_by_pk(pk: str) -> str:
@@ -100,7 +100,7 @@ elif prefix == 'xch':
     port = 8444
 else:
     print("Uncorrect prefix")
-    quit()
+    sys.exit()
        
 
 if __name__ == "__main__":
@@ -141,6 +141,12 @@ if __name__ == "__main__":
             #print(c)
 
         test_mnemonic = " ".join(test_mnemonic_arr)
+
+        try:
+            bytes_from_mnemonic(test_mnemonic)
+        except:
+            continue
+
         #print(test_mnemonic)
 
         seed=mnemonic_to_seed(test_mnemonic,"")
@@ -149,9 +155,10 @@ if __name__ == "__main__":
         for ii in range(max_i):
             address = get_address(key,ii)
             if(address == s_address):
-                print("---------------------------------")
+                print("\n---------------------------------")
                 print(test_mnemonic)
                 print("---------------------------------")
                 sys.exit()
+
 
     print("Not found :(")
