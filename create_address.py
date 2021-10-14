@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 from base.util.byte_types import hexstr_to_bytes
 from base.consensus.coinbase import create_puzzlehash_for_pk
 from base.util.bech32m import decode_puzzle_hash, encode_puzzle_hash
-from words.mnemonic import generate_mnemonic, mnemonic_to_seed
+from words.mnemonic import generate_mnemonic, mnemonic_to_seed, bip39_word_list
 from blspy import G1Element, PrivateKey, G2Element, AugSchemeMPL
 
 def create_address_by_pk(pk: str) -> str:
@@ -88,9 +88,9 @@ params = json.load(config_f)
 
 
 prefix = params["prefix"]
-words = params["words"]
+mnemonic = params["mnemonic"]
+s_address = params["address"]
 max_i = params["max_i"]
-process_count = params["process_count"]
 
 
 if prefix == 'xcc':
@@ -139,15 +139,27 @@ Address [{2}]: {1}
 
 if __name__ == "__main__":
 
-    if sys.platform.startswith('win'):
-            # On Windows calling this function is necessary.
-            multiprocessing.freeze_support()
+    #mnemonic = generate_mnemonic();    
+    #print(mnemonic)
 
-    print(params)
+    seed = mnemonic_to_seed(mnemonic, "")
+    key = AugSchemeMPL.key_gen(seed)
+    print_header(key)
 
-    lock = Lock()
 
-    pool = [Process(target=find_address,  args=(lock,)) for _ in range(process_count)]
+    userMnemonic = mnemonic
+    keyWordList=bip39_word_list().splitlines()
+    for index in range(len(keyWordList)):
+        testWord=keyWordList[index]
+        print(str(index)+"/"+str(len(keyWordList))+" "+testWord)
 
-    for p in pool:
-        p.start()
+        testMne = userMnemonic.replace("?",testWord)
+        seed=mnemonic_to_seed(testMne,"")
+        key=AugSchemeMPL.key_gen(seed)
+
+        for i in range(max_i):
+            address = get_address(key,i)
+            if(address == s_address):
+                print(print("the result is:"+testWord))
+                quit()
+            
