@@ -1,0 +1,8 @@
+{
+   "words":[
+      "([0-9])\\1{3}$"
+   ],	
+   "prefix":"xcc",
+   "process_count":-1,
+   "max_i":1
+}

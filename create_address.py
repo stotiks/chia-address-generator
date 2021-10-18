@@ -1,6 +1,7 @@
 import progressbar
 import json
 import sys
+import re
 import multiprocessing
 
 from multiprocessing import Process, Lock
@@ -92,6 +93,13 @@ words = params["words"]
 max_i = params["max_i"]
 process_count = params["process_count"]
 
+if process_count == -1:
+    process_count = multiprocessing.cpu_count()
+
+re_words = []
+for word in words:
+    re_words.append(re.compile(word))
+
 
 if prefix == 'xcc':
     port = 9699
@@ -103,8 +111,8 @@ else:
 
 
 def check_address(address):
-    for word in words:
-        if address.endswith(word):
+    for r in re_words:
+        if r.search(address):
             return True
     return False
 
