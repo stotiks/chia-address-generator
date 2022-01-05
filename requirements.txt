@@ -1,2 +1,6 @@
+bitstring==3.1.9
 blspy==1.0.5
-progressbar2=3.53.3
+clvm==0.9.7
+clvm-tools==0.4.3
+clvm_rs==0.1.8
+progressbar2==3.53.3
